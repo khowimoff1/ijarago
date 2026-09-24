@@ -1,0 +1,24 @@
+# Netlify sozlamalari — hech narsani qo'lda kiritish shart emas
+[build]
+  command = "npm install --prefix client && npm run build --prefix client"
+  publish = "client/dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["express"]
+
+# API so'rovlari serverless funksiyaga yo'naltiriladi
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# React Router: har qanday sahifa index.html'ga (yangilaganda 404 bo'lmasligi uchun)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

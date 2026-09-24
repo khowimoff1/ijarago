@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-logo: "Nunito", "Plus Jakarta Sans", sans-serif;
+
+  /* Asosiy fonlar */
+  --color-cream: #f7f6fd;      /* sahifa foni */
+  --color-sand: #efedfa;       /* ikkinchi darajali fon */
+  --color-ink: #03163d;        /* asosiy matn — logodagi to'q ko'k */
+  --color-muted: #5d6685;      /* ikkinchi darajali matn */
+  --color-line: #e4e2f2;       /* chiziqlar */
+  --color-night: #0c0a33;      /* to'q bo'limlar */
+  --color-night-2: #1a1456;
+
+  /* Brend — logodagi binafsha → indigo */
+  --color-brand-50: #f3eeff;
+  --color-brand-100: #e6dcff;
+  --color-brand-200: #cdb9ff;
+  --color-brand-400: #8a5cff;
+  --color-brand-500: #5a1dfb;
+  --color-brand-600: #4a1bfc;
+  --color-brand-700: #3412c9;
+  --color-brand-900: #1c0a6e;
+  --color-violet: #9923fb;
+  --color-indigo: #2e14ed;
+
+  /* Urg'u — logodagi sariq → to'q sariq */
+  --color-gold: #fee04c;
+  --color-amber: #fea31c;
+  --color-sky: #22c3ee;
+  --color-mint: #14b88a;
+  --color-sun: #fdb022;
+  --color-sun-soft: #fff5d9;
+  --color-coral: #ef4a5f;
+
+  --shadow-soft: 0 1px 2px rgb(3 22 61 / 0.04), 0 8px 24px -8px rgb(3 22 61 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(3 22 61 / 0.04), 0 24px 48px -16px rgb(46 20 237 / 0.22);
+  --shadow-glow: 0 10px 36px -10px rgb(74 27 252 / 0.6);
+  --shadow-gold: 0 10px 30px -10px rgb(254 163 28 / 0.7);
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 8s ease-in-out 1s infinite;
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-cream text-ink antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection { background: #5a1dfb; color: #fff; }
+}
+
+@utility container-page {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+/* Gradientlar */
+@utility bg-brand-gradient {
+  background-image: linear-gradient(135deg, #9923fb 0%, #5a1dfb 50%, #2e14ed 100%);
+}
+@utility bg-gold-gradient {
+  background-image: linear-gradient(135deg, #fee04c 0%, #fea31c 100%);
+}
+@utility text-gradient {
+  background-image: linear-gradient(100deg, #d4c2ff 0%, #fee04c 55%, #fea31c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility text-gradient-dark {
+  background-image: linear-gradient(100deg, #9923fb 0%, #5a1dfb 50%, #2e14ed 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+@utility bg-dots {
+  background-image: radial-gradient(rgb(3 22 61 / 0.08) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Tugmalar */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold whitespace-nowrap transition duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-brand-gradient text-white shadow-glow hover:brightness-110 hover:-translate-y-px;
+}
+@utility btn-gold {
+  @apply btn bg-gold-gradient text-ink shadow-gold hover:brightness-105 hover:-translate-y-px;
+}
+@utility btn-dark {
+  @apply btn bg-ink text-white hover:bg-night-2;
+}
+@utility btn-ghost {
+  @apply btn border border-line bg-white text-ink shadow-soft hover:border-brand-200 hover:text-brand-600;
+}
+@utility btn-glass {
+  @apply btn border border-white/15 bg-white/10 text-white backdrop-blur hover:bg-white/20;
+}
+
+@utility input {
+  @apply w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm outline-none transition placeholder:text-muted/60 focus:border-brand-400 focus:ring-4 focus:ring-brand-100;
+}
+@utility card {
+  @apply rounded-3xl border border-line bg-white shadow-soft;
+}
+@utility eyebrow {
+  @apply inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-brand-600;
+}
