@@ -3,3 +3,8 @@ dist
 .env
 *.log
 .netlify
+.DS_Store
+Thumbs.db
+.vscode
+.env.*
+!.env.example

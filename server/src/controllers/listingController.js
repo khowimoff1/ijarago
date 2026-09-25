@@ -1,4 +1,4 @@
-import { db } from '../data/store.js';
+import { db, ownerOf } from '../data/store.js';
 
 export const getCategories = (req, res) => {
   const withCount = db.categories.map((c) => ({
@@ -56,28 +56,37 @@ export const getDistricts = (req, res) => {
 };
 
 export const createListing = (req, res) => {
-  const { title, category, pricePerDay, deposit, district, description, minDays, ownerName } = req.body;
-  if (!title || !category || !pricePerDay || !district) {
+  const { title, category, pricePerDay, deposit, district, description, minDays } = req.body;
+  const price = Number(pricePerDay);
+  if (!title?.trim() || !db.categories.some((c) => c.id === category) || !district || !(price > 0)) {
     return res.status(400).json({ message: "Majburiy maydonlarni to'ldiring" });
   }
   const item = {
     id: String(Date.now()),
-    title,
+    title: title.trim().slice(0, 100),
     category,
-    pricePerDay: Number(pricePerDay),
-    deposit: Number(deposit) || 0,
+    pricePerDay: price,
+    deposit: Math.max(Number(deposit) || 0, 0),
     city: 'Toshkent',
     district,
-    description: description || '',
-    minDays: Number(minDays) || 1,
-    condition: "Yaxshi",
+    description: String(description || '').slice(0, 2000),
+    minDays: Math.max(Number(minDays) || 1, 1),
+    condition: 'Yaxshi',
     features: [],
     images: [],
     rating: 0,
     reviews: 0,
-    owner: { id: 'me', name: ownerName || 'Siz', rating: 0, deals: 0, verified: false, since: '2026' },
+    owner: ownerOf(req.user),
     createdAt: new Date().toISOString(),
   };
   db.listings.unshift(item);
   res.status(201).json(item);
+};
+
+export const deleteListing = (req, res) => {
+  const index = db.listings.findIndex((l) => l.id === req.params.id);
+  if (index === -1) return res.status(404).json({ message: "E'lon topilmadi" });
+  if (db.listings[index].owner.id !== req.user.id) return res.status(403).json({ message: "Ruxsat yo'q" });
+  db.listings.splice(index, 1);
+  res.json({ ok: true });
 };

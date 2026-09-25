@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ImagePlus, CheckCircle2 } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { som } from '../lib/format.js';
-import { useAuth } from '../context/AuthContext.jsx';
 import ProductVisual from '../components/ProductVisual.jsx';
 
 const empty = { title: '', category: '', pricePerDay: '', deposit: '', district: '', minDays: 1, description: '' };
@@ -24,7 +23,6 @@ export default function PostListing() {
   const [districts, setDistricts] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,7 +41,7 @@ export default function PostListing() {
     }
     setLoading(true);
     try {
-      const created = await api.createListing({ ...form, ownerName: user?.name });
+      const created = await api.createListing(form);
       navigate(`/elon/${created.id}`);
     } catch (err) {
       setError(err.message);

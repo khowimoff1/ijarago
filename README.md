@@ -31,6 +31,10 @@ Demo kirish: istalgan telefon raqam, SMS kod — **123456**.
 | `/elon-berish` | E'lon joylash formasi (jonli oldindan ko'rish bilan) |
 | `/kirish` | Telefon + SMS kod orqali kirish |
 | `/sevimlilar` | Saqlangan e'lonlar |
+| `/profil` | Mening profilim (kirish shart): e'lonlarim, bandlarim, kelgan so'rovlar (tasdiqlash/rad etish), sevimlilar, sozlamalar |
+| `/egasi/:id` | Egasining ochiq profili va uning e'lonlari |
+
+`/elon-berish` va `/profil` sahifalari faqat tizimga kirgan foydalanuvchiga ochiq.
 
 ## API
 | Metod | Yo'l | Tavsif |
@@ -40,28 +44,41 @@ Demo kirish: istalgan telefon raqam, SMS kod — **123456**.
 | GET | `/api/districts` | Tumanlar ro'yxati |
 | GET | `/api/listings?q=&category=&district=&minPrice=&maxPrice=&sort=` | E'lonlar (sort: new, rating, cheap, expensive) |
 | GET | `/api/listings/:id` | Bitta e'lon + sharhlar + o'xshashlar |
-| POST | `/api/listings` | Yangi e'lon |
+| POST | `/api/listings` 🔒 | Yangi e'lon |
+| DELETE | `/api/listings/:id` 🔒 | E'lonni o'chirish (faqat egasi) |
 | POST | `/api/auth/send-code` | SMS kod yuborish (demo) |
-| POST | `/api/auth/verify` | Kodni tekshirish |
+| POST | `/api/auth/verify` | Kodni tekshirish, `token` qaytaradi |
+| GET / PATCH | `/api/me` 🔒 | Mening profilim / tahrirlash (ism, tuman, bio) |
+| GET | `/api/me/listings` 🔒 | Mening e'lonlarim |
+| GET | `/api/me/bookings` 🔒 | Men band qilganlar |
+| GET | `/api/me/requests` 🔒 | Mening buyumlarimga kelgan so'rovlar |
+| GET | `/api/users/:id` | Ochiq profil + e'lonlari |
+| POST | `/api/bookings` 🔒 | Band qilish so'rovi |
+| PATCH | `/api/bookings/:id` 🔒 | Holatni o'zgartirish (egasi: confirmed/rejected, band qilgan: cancelled) |
 
-Ma'lumotlar hozircha `server/src/data/` ichida, xotirada saqlanadi. Server qayta ishga tushsa, yangi e'lonlar o'chadi.
+🔒 — `Authorization: Bearer <token>` sarlavhasi kerak. Token `AUTH_SECRET` bilan imzolanadi (`server/.env`), productionda uni albatta o'zgartiring.
+
+Ma'lumotlar (e'lonlar, foydalanuvchilar, band qilishlar) hozircha xotirada saqlanadi. Server qayta ishga tushsa, yangi ma'lumotlar o'chadi (tizimga kirish sessiyasi esa saqlanib qoladi — token o'zi foydalanuvchini tiklaydi).
 Keyingi qadam: MongoDB yoki PostgreSQL ulash.
 
 ## Tuzilma
 ```
 server/src/
-  index.js            Express ilova
+  index.js            Server ishga tushirish
+  app.js              Express ilova (Netlify ham shuni ishlatadi)
   routes/index.js     API yo'llari
-  controllers/        listing, auth, health
+  middleware/         auth.js (token tekshiruvi)
+  controllers/        listing, auth, user, booking, health
+  utils/              token.js (imzolangan token)
   data/               seed.js (namunaviy e'lonlar), store.js
 client/src/
   main.jsx, App.jsx   Router
   index.css           Tailwind + ranglar (@theme)
-  lib/                api.js, format.js, icons.js
+  lib/                api.js, session.js, format.js, icons.js, images.js
   context/            AuthContext, FavoritesContext
-  components/         Navbar, Footer, Logo, ListingCard, ProductVisual, SectionHeading, Layout
+  components/         Navbar, Footer, Logo, Avatar, ProtectedRoute, ListingCard, ProductVisual, SectionHeading, Layout
   components/home/    Bosh sahifa bo'limlari
-  pages/              Home, Listings, ListingDetail, PostListing, Login, Favorites, NotFound
+  pages/              Home, Listings, ListingDetail, PostListing, Login, Favorites, Profile, OwnerProfile, NotFound
 ```
 
 ## Netlify'ga joylash

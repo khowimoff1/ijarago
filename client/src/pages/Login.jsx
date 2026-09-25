@@ -32,7 +32,7 @@ export default function Login() {
     setError(''); setLoading(true);
     try {
       const r = await api.verify({ phone, code, name });
-      login(r.user);
+      login(r);
       navigate(location.state?.from || '/');
     } catch (err) { setError(err.message); } finally { setLoading(false); }
   };

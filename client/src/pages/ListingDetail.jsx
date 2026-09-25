@@ -4,6 +4,7 @@ import { ChevronLeft, Heart, MapPin, Star, BadgeCheck, ShieldCheck, CalendarDays
 import { api } from '../lib/api.js';
 import { som, daysBetween, today } from '../lib/format.js';
 import ProductVisual from '../components/ProductVisual.jsx';
+import Avatar from '../components/Avatar.jsx';
 import ListingCard from '../components/ListingCard.jsx';
 import { useFavorites } from '../context/FavoritesContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -15,13 +16,23 @@ export default function ListingDetail() {
   const [from, setFrom] = useState(today(1));
   const [to, setTo] = useState(today(3));
   const [booked, setBooked] = useState(false);
+  const [booking, setBooking] = useState(false);
+  const [bookError, setBookError] = useState('');
   const { has, toggle } = useFavorites();
   const { user } = useAuth();
 
   useEffect(() => {
-    setItem(null); setError(''); setBooked(false);
+    setItem(null); setError(''); setBooked(false); setBookError('');
     api.listing(id).then(setItem).catch((e) => setError(e.message));
   }, [id]);
+
+  const book = async () => {
+    setBookError(''); setBooking(true);
+    try {
+      await api.createBooking({ listingId: item.id, from, to });
+      setBooked(true);
+    } catch (e) { setBookError(e.message); } finally { setBooking(false); }
+  };
 
   if (error) {
     return (
@@ -92,10 +103,8 @@ export default function ListingDetail() {
           </div>
 
           <div className="card mt-8 flex flex-wrap items-center justify-between gap-4 p-5">
-            <div className="flex items-center gap-4">
-              <span className="grid h-14 w-14 place-items-center rounded-full bg-brand-gradient text-lg font-bold text-white">
-                {item.owner.name[0]}
-              </span>
+            <Link to={`/egasi/${item.owner.id}`} className="flex items-center gap-4">
+              <Avatar name={item.owner.name} className="h-14 w-14 text-lg" />
               <div>
                 <p className="flex items-center gap-1.5 font-bold">
                   {item.owner.name}
@@ -105,8 +114,8 @@ export default function ListingDetail() {
                   {item.owner.rating > 0 ? `★ ${item.owner.rating} · ${item.owner.deals} ta ijara · ` : ''}{item.owner.since}-yildan beri
                 </p>
               </div>
-            </div>
-            <button className="btn-ghost"><MessageCircle className="h-4 w-4" /> Yozish</button>
+            </Link>
+            <Link to={`/egasi/${item.owner.id}`} className="btn-ghost"><MessageCircle className="h-4 w-4" /> Profilni ko'rish</Link>
           </div>
 
           {item.reviewList?.length > 0 && (
@@ -169,12 +178,17 @@ export default function ListingDetail() {
             {booked ? (
               <div className="mt-6 rounded-2xl bg-brand-50 p-4 text-sm text-brand-700">
                 <p className="font-bold">So'rov yuborildi!</p>
-                <p className="mt-1">Egasi tasdiqlagach, sizga xabar keladi.</p>
+                <p className="mt-1">Egasi tasdiqlagach, holati <Link to="/profil" className="font-semibold underline">profilingizda</Link> yangilanadi.</p>
               </div>
+            ) : user?.id === item.owner.id ? (
+              <Link to="/profil" className="btn-ghost mt-6 w-full py-3.5">Bu sizning e'loningiz</Link>
             ) : user ? (
-              <button disabled={tooShort || days === 0} onClick={() => setBooked(true)} className="btn-primary mt-6 w-full py-3.5">
-                Band qilish
-              </button>
+              <>
+                <button disabled={tooShort || days === 0 || booking} onClick={book} className="btn-primary mt-6 w-full py-3.5">
+                  {booking ? 'Yuborilmoqda...' : 'Band qilish'}
+                </button>
+                {bookError && <p className="mt-3 text-sm font-medium text-coral">{bookError}</p>}
+              </>
             ) : (
               <Link to="/kirish" state={{ from: `/elon/${item.id}` }} className="btn-primary mt-6 w-full py-3.5">
                 Band qilish uchun kiring

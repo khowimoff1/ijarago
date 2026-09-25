@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Heart, Menu, Plus, X, LogOut } from 'lucide-react';
 import Logo from './Logo.jsx';
+import Avatar from './Avatar.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useFavorites } from '../context/FavoritesContext.jsx';
 
@@ -80,12 +81,10 @@ export default function Navbar() {
 
           {user ? (
             <div className="hidden items-center gap-1 sm:flex">
-              <span className={`flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-sm font-semibold ${onDark ? 'bg-white/10 text-white' : 'bg-sand'}`}>
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-gradient text-xs font-bold text-white">
-                  {user.name?.[0]?.toUpperCase()}
-                </span>
+              <Link to="/profil" className={`flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-sm font-semibold transition ${onDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-sand hover:bg-brand-50'}`}>
+                <Avatar name={user.name} className="h-8 w-8 text-xs" />
                 {user.name}
-              </span>
+              </Link>
               <button onClick={logout} className={iconBtn} aria-label="Chiqish"><LogOut className="h-4 w-4" /></button>
             </div>
           ) : (
@@ -111,7 +110,10 @@ export default function Navbar() {
               <button key={l.to} onClick={() => go(l.to)} className="rounded-2xl px-4 py-3 text-left font-semibold hover:bg-sand">{l.label}</button>
             ))}
             {user ? (
-              <button onClick={() => { logout(); setOpen(false); }} className="rounded-2xl px-4 py-3 text-left font-semibold hover:bg-sand">Chiqish ({user.name})</button>
+              <>
+                <button onClick={() => go('/profil')} className="rounded-2xl px-4 py-3 text-left font-semibold hover:bg-sand">Profil ({user.name})</button>
+                <button onClick={() => { logout(); setOpen(false); navigate('/'); }} className="rounded-2xl px-4 py-3 text-left font-semibold hover:bg-sand">Chiqish</button>
+              </>
             ) : (
               <button onClick={() => go('/kirish')} className="rounded-2xl px-4 py-3 text-left font-semibold hover:bg-sand">Kirish</button>
             )}

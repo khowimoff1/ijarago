@@ -1,25 +1,30 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { loadSession, saveSession, clearSession } from '../lib/session.js';
 
 const AuthContext = createContext(null);
-const KEY = 'ijarago:user';
-
-const load = () => {
-  try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; }
-};
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(load);
+  const [user, setUser] = useState(() => loadSession().user);
 
-  const login = (u) => {
+  const login = ({ user: u, token }) => {
     setUser(u);
-    try { localStorage.setItem(KEY, JSON.stringify(u)); } catch { /* e'tiborsiz */ }
+    saveSession({ user: u, token });
   };
   const logout = () => {
     setUser(null);
-    try { localStorage.removeItem(KEY); } catch { /* e'tiborsiz */ }
+    clearSession();
+  };
+  const updateUser = (u) => {
+    setUser(u);
+    saveSession({ user: u, token: loadSession().token });
   };
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+  useEffect(() => {
+    window.addEventListener('ijarago:unauthorized', logout);
+    return () => window.removeEventListener('ijarago:unauthorized', logout);
+  }, []);
+
+  return <AuthContext.Provider value={{ user, login, logout, updateUser }}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);
