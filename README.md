@@ -58,7 +58,17 @@ Demo kirish: istalgan telefon raqam, SMS kod — **123456**.
 
 🔒 — `Authorization: Bearer <token>` sarlavhasi kerak. Token `AUTH_SECRET` bilan imzolanadi (`server/.env`), productionda uni albatta o'zgartiring.
 
-Ma'lumotlar (e'lonlar, foydalanuvchilar, band qilishlar) hozircha xotirada saqlanadi. Server qayta ishga tushsa, yangi ma'lumotlar o'chadi (tizimga kirish sessiyasi esa saqlanib qoladi — token o'zi foydalanuvchini tiklaydi).
+## Baza (Supabase)
+
+`server/.env` ichida `SUPABASE_URL` va `SUPABASE_SERVICE_KEY` bo'lsa, ma'lumotlar Supabase (PostgreSQL) da saqlanadi. Bo'sh bo'lsa, xotiradagi vaqtinchalik baza ishlaydi (server o'chsa ma'lumot yo'qoladi) — lokal sinov uchun qulay.
+
+1. supabase.com da loyiha oching.
+2. **SQL Editor** ichida `supabase/schema.sql` faylini ishga tushiring.
+3. **Project Settings → API** dan `Project URL` va `service_role` kalitni `server/.env` ga yozing. Bu kalit maxfiy: GitHub'ga qo'ymang, brauzerga bermang.
+4. Namunaviy e'lonlarni yuklang: `npm run seed --prefix server`
+5. Netlify → Environment variables ga ham xuddi shu ikkita o'zgaruvchini (Secret sifatida) qo'shing.
+
+Jadvallarda RLS yoqilgan va siyosat yo'q, shuning uchun bazaga faqat server orqali kirish mumkin.
 Keyingi qadam: MongoDB yoki PostgreSQL ulash.
 
 ## Tuzilma

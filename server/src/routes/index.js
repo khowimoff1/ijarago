@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
+import { a } from '../utils/asyncHandler.js';
 import { getHealth } from '../controllers/healthController.js';
 import {
   getCategories, getStats, getListings, getListing, createListing, deleteListing, getDistricts,
@@ -10,26 +11,26 @@ import { createBooking, getMyBookings, getIncomingBookings, updateBooking } from
 
 const router = Router();
 router.get('/health', getHealth);
-router.get('/stats', getStats);
-router.get('/categories', getCategories);
-router.get('/districts', getDistricts);
+router.get('/stats', a(getStats));
+router.get('/categories', a(getCategories));
+router.get('/districts', a(getDistricts));
 
-router.get('/listings', getListings);
-router.get('/listings/:id', getListing);
-router.post('/listings', requireAuth, createListing);
-router.delete('/listings/:id', requireAuth, deleteListing);
+router.get('/listings', a(getListings));
+router.get('/listings/:id', a(getListing));
+router.post('/listings', requireAuth, a(createListing));
+router.delete('/listings/:id', requireAuth, a(deleteListing));
 
-router.post('/auth/send-code', sendCode);
-router.post('/auth/verify', verifyCode);
+router.post('/auth/send-code', a(sendCode));
+router.post('/auth/verify', a(verifyCode));
 
 router.get('/me', requireAuth, getMe);
-router.patch('/me', requireAuth, updateMe);
-router.get('/me/listings', requireAuth, getMyListings);
-router.get('/me/bookings', requireAuth, getMyBookings);
-router.get('/me/requests', requireAuth, getIncomingBookings);
-router.get('/users/:id', getUserProfile);
+router.patch('/me', requireAuth, a(updateMe));
+router.get('/me/listings', requireAuth, a(getMyListings));
+router.get('/me/bookings', requireAuth, a(getMyBookings));
+router.get('/me/requests', requireAuth, a(getIncomingBookings));
+router.get('/users/:id', a(getUserProfile));
 
-router.post('/bookings', requireAuth, createBooking);
-router.patch('/bookings/:id', requireAuth, updateBooking);
+router.post('/bookings', requireAuth, a(createBooking));
+router.patch('/bookings/:id', requireAuth, a(updateBooking));
 
 export default router;
