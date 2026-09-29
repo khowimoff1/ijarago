@@ -31,7 +31,8 @@ export const api = {
   createListing: (body) => request('/listings', send('POST', body)),
   deleteListing: (id) => request('/listings/' + id, { method: 'DELETE' }),
 
-  telegramAuth: (body) => request('/auth/telegram', send('POST', body)),
+  telegramLoginStart: () => request('/auth/telegram/start', { method: 'POST' }),
+  telegramLoginStatus: (token) => request('/auth/telegram/status/' + token),
 
   me: () => request('/me'),
   updateMe: (body) => request('/me', send('PATCH', body)),

@@ -70,15 +70,20 @@ create table if not exists bookings (
 create index if not exists bookings_owner_idx  on bookings(owner_id);
 create index if not exists bookings_renter_idx on bookings(renter_id);
 
-create table if not exists login_codes (
-  phone      text primary key,
-  code       text not null,
+-- Bot orqali kirish: /start tugmasi bosilgandan tasdiqlangunga qadar bo'lgan holat
+create table if not exists pending_logins (
+  token      text primary key,
+  status     text not null default 'waiting_start' check (status in ('waiting_start','waiting_contact','confirmed','expired')),
+  chat_id    bigint,
+  user_id    text references users(id) on delete cascade,
+  created_at timestamptz not null default now(),
   expires_at timestamptz not null
 );
+create index if not exists pending_logins_chat_idx on pending_logins(chat_id);
 
-alter table categories  enable row level security;
-alter table users       enable row level security;
-alter table listings    enable row level security;
-alter table reviews     enable row level security;
-alter table bookings    enable row level security;
-alter table login_codes enable row level security;
+alter table categories      enable row level security;
+alter table users           enable row level security;
+alter table listings        enable row level security;
+alter table reviews         enable row level security;
+alter table bookings        enable row level security;
+alter table pending_logins  enable row level security;

@@ -11,7 +11,6 @@ Node.js (Express) backend + React (Vite) + Tailwind CSS v4 frontend.
 npm install
 npm run install:all
 copy server\.env.example server\.env     # Windows
-copy client\.env.example client\.env     # Windows
 ```
 
 ## Ishga tushirish
@@ -47,7 +46,9 @@ Kirish Telegram orqali (pastdagi "Telegram orqali kirish" bo'limiga qarang).
 | GET | `/api/listings/:id` | Bitta e'lon + sharhlar + o'xshashlar |
 | POST | `/api/listings` 🔒 | Yangi e'lon |
 | DELETE | `/api/listings/:id` 🔒 | E'lonni o'chirish (faqat egasi) |
-| POST | `/api/auth/telegram` | Telegram Login Widget ma'lumotini tekshirib, `token` qaytaradi |
+| POST | `/api/auth/telegram/start` | Bot orqali kirish so'rovi yaratadi, `botUrl` qaytaradi |
+| GET | `/api/auth/telegram/status/:token` | Sayt shu holatni so'raydi: `waiting_start` / `waiting_contact` / `confirmed` / `expired` |
+| POST | `/api/telegram/webhook` | Telegram bot xabarlari shu yerga keladi (foydalanuvchi chaqirmaydi) |
 | GET / PATCH | `/api/me` 🔒 | Mening profilim / tahrirlash (ism, tuman, bio) |
 | GET | `/api/me/listings` 🔒 | Mening e'lonlarim |
 | GET | `/api/me/bookings` 🔒 | Men band qilganlar |
@@ -70,18 +71,22 @@ Kirish Telegram orqali (pastdagi "Telegram orqali kirish" bo'limiga qarang).
 
 Jadvallarda RLS yoqilgan va siyosat yo'q, shuning uchun bazaga faqat server orqali kirish mumkin.
 
-Yangi baza yaratganda (yoki `users.telegram_id` ustuni yo'q bo'lsa) `supabase/migrations/002_telegram_auth.sql` ni ham SQL Editor'da ishga tushiring.
+Yangi baza yaratganda (yoki `users.telegram_id` ustuni yo'q bo'lsa) `supabase/migrations/002_telegram_auth.sql` va `003_bot_login.sql` fayllarini ham SQL Editor'da ishga tushiring.
 
 ## Telegram orqali kirish
 
-Kirish [Telegram Login Widget](https://core.telegram.org/widgets/login) orqali amalga oshadi — SMS yo'q, bepul.
+Kirish botga o'xshash oqim orqali amalga oshadi: foydalanuvchi "Telegram orqali kirish" tugmasini bosadi → Telegram ilovasida bot ochiladi → foydalanuvchi bitta tugma bilan telefon raqamini ulashadi → sayt avtomatik kirgan holatga o'tadi. SMS yo'q, bepul, telefon raqamni qo'lda kiritish shart emas.
 
-1. Telegram'da **@BotFather** ga yozing, `/newbot` bilan bot yarating.
-2. Berilgan tokenni `server/.env` ga `TELEGRAM_BOT_TOKEN=` sifatida yozing.
-3. `/setdomain` buyrug'i bilan botni saytingiz domenига (masalan `ijaragodemo.netlify.app`) bog'lang — bu shart, aks holda tugma ishlamaydi.
-4. Bot username'ini `client/.env` ga (va Netlify → Environment variables'ga, Secret belgisiz) `VITE_TELEGRAM_BOT_USERNAME=` sifatida yozing.
+1. Telegram'da **@BotFather** ga yozing, `/newbot` bilan bot yarating. Bot username **albatta** `bot` bilan tugashi kerak.
+2. Berilgan tokenni `server/.env` ga `TELEGRAM_BOT_TOKEN=` va username'ni (@ belgisisiz) `TELEGRAM_BOT_USERNAME=` sifatida yozing.
+3. `TELEGRAM_WEBHOOK_SECRET=` ga o'zingiz tasodifiy uzun matn o'ylab yozing (Telegram'dan kelmagan soxta so'rovlarni ajratish uchun).
+4. Sayt production'ga joylangach, botga webhook manzilini bir marta ro'yxatdan o'tkazing:
+   ```bash
+   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<domen>/api/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>"
+   ```
+5. Netlify → Environment variables'ga `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`ni qo'shing (birinchi va uchinchisi Secret sifatida).
 
-Foydalanuvchining Telegram nomi/rasmi emas, faqat ism va username saqlanadi (`users.telegram_username`).
+Foydalanuvchining ismi, Telegram username'i va (kontakt ulashilgach) telefon raqami saqlanadi (`users` jadvali). Telefon raqam hozircha API orqali qaytarilmaydi, faqat bazada saqlanadi.
 
 ## Tuzilma
 ```
@@ -91,8 +96,8 @@ server/src/
   routes/index.js     API yo'llari
   middleware/         auth.js (token tekshiruvi)
   controllers/        listing, auth, user, booking, health
-  utils/              token.js (imzolangan token)
-  data/               seed.js (namunaviy e'lonlar), store.js
+  utils/              token.js (imzolangan token), telegramBot.js (Bot API)
+  data/               seed.js (namunaviy e'lonlar), repo/ (supabase.js, memory.js)
 client/src/
   main.jsx, App.jsx   Router
   index.css           Tailwind + ranglar (@theme)
@@ -115,4 +120,4 @@ Qadamlar:
 2. Netlify → **Add new site → Import an existing project → GitHub** → repozitoriyani tanlang.
 3. Sozlamalar `netlify.toml`dan o'zi o'qiladi — **Deploy** tugmasini bosing.
 
-Eslatma: Netlify'da ma'lumotlar hali ham xotirada saqlanadi, shuning uchun yangi qo'shilgan e'lonlar vaqtincha. Doimiy saqlash uchun ma'lumotlar bazasi (masalan, Supabase yoki MongoDB Atlas) ulash kerak.
+`SUPABASE_URL` va `SUPABASE_SERVICE_KEY` Netlify'ga qo'shilmagan bo'lsa, ma'lumotlar xotirada saqlanadi va har deploy'da o'chadi — production uchun yuqoridagi "Baza (Supabase)" bo'limini bajaring.

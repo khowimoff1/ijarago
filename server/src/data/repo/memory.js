@@ -14,6 +14,7 @@ for (const l of seedListings) {
 const listings = seedListings.map(({ owner, ...rest }) => ({ ...rest, ownerId: owner.id }));
 const reviews = [...seedReviews];
 const bookings = [];
+const pendingLogins = new Map();
 
 const withOwner = ({ ownerId, ...l }) => ({ ...l, owner: ownerOf(users.find((u) => u.id === ownerId)) });
 const withListing = (b) => ({ ...b, listing: bookingListing(listings.find((l) => l.id === b.listingId)) || null });
@@ -106,5 +107,21 @@ export default {
     b.status = status;
     if (status === 'confirmed') users.find((u) => u.id === b.ownerId).deals += 1;
     return withListing(b);
+  },
+
+  async createPendingLogin(token, expiresAt) {
+    pendingLogins.set(token, { token, status: 'waiting_start', chatId: null, userId: null, expiresAt: expiresAt.getTime() });
+  },
+  async getPendingLogin(token) { return pendingLogins.get(token) || null; },
+  async attachChatToLogin(token, chatId) {
+    const p = pendingLogins.get(token);
+    if (p && p.status === 'waiting_start') { p.status = 'waiting_contact'; p.chatId = chatId; }
+  },
+  async confirmLogin(chatId, userId) {
+    const p = [...pendingLogins.values()].find((x) => x.chatId === chatId && x.status === 'waiting_contact' && x.expiresAt > Date.now());
+    if (!p) return false;
+    p.status = 'confirmed';
+    p.userId = userId;
+    return true;
   },
 };

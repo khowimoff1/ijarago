@@ -1,46 +1,54 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ShieldCheck, Star } from 'lucide-react';
+import { Send, ShieldCheck, Star } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import Logo from '../components/Logo.jsx';
 import { heroShots } from '../lib/images.js';
 
-const BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME;
+const POLL_MS = 2000;
 
 export default function Login() {
+  const [state, setState] = useState('idle'); // idle | waiting | expired | error
+  const [botUrl, setBotUrl] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const widgetRef = useRef(null);
+  const pollRef = useRef(null);
 
-  useEffect(() => {
-    window.onTelegramAuth = async (tgUser) => {
-      setError(''); setLoading(true);
-      try {
-        const r = await api.telegramAuth(tgUser);
-        login(r);
-        navigate(location.state?.from || '/');
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (BOT_USERNAME && widgetRef.current) {
-      const script = document.createElement('script');
-      script.src = 'https://telegram.org/js/telegram-widget.js?22';
-      script.async = true;
-      script.setAttribute('data-telegram-login', BOT_USERNAME.replace(/^@/, ''));
-      script.setAttribute('data-size', 'large');
-      script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-      script.setAttribute('data-request-access', 'write');
-      widgetRef.current.appendChild(script);
+  const stopPolling = () => { clearInterval(pollRef.current); pollRef.current = null; };
+  useEffect(() => () => stopPolling(), []);
+
+  const start = async () => {
+    setError(''); setState('waiting');
+    try {
+      const r = await api.telegramLoginStart();
+      setBotUrl(r.botUrl);
+      window.open(r.botUrl, '_blank', 'noopener');
+
+      pollRef.current = setInterval(async () => {
+        try {
+          const s = await api.telegramLoginStatus(r.token);
+          if (s.status === 'confirmed') {
+            stopPolling();
+            login(s);
+            navigate(location.state?.from || '/');
+          } else if (s.status === 'expired') {
+            stopPolling();
+            setState('expired');
+          }
+        } catch {
+          stopPolling();
+          setState('error');
+          setError('Holatni tekshirishda xatolik. Qaytadan urining');
+        }
+      }, POLL_MS);
+    } catch (err) {
+      setState('error');
+      setError(err.message);
     }
-    return () => { delete window.onTelegramAuth; };
-  }, []);
+  };
 
   return (
     <div className="container-page py-10">
@@ -64,18 +72,37 @@ export default function Login() {
             <h1 className="mt-8 text-3xl font-extrabold tracking-tight lg:mt-0">Xush kelibsiz!</h1>
             <p className="mt-2 text-muted">Kirish yoki ro'yxatdan o'tish uchun Telegram orqali tasdiqlang.</p>
 
-            <div className="mt-8 flex min-h-16 items-center justify-center">
-              {loading ? (
-                <p className="font-semibold text-muted">Tekshirilmoqda...</p>
-              ) : BOT_USERNAME ? (
-                <div ref={widgetRef} className="overflow-hidden rounded-full" />
-              ) : (
-                <p className="rounded-xl bg-[#fde6e0] px-4 py-3 text-sm font-medium text-coral">
-                  Telegram kirish hali sozlanmagan (VITE_TELEGRAM_BOT_USERNAME yo'q)
-                </p>
+            <div className="mt-8">
+              {state === 'idle' && (
+                <button onClick={start} className="btn-primary w-full py-4">
+                  <Send className="h-4 w-4" /> Telegram orqali kirish
+                </button>
+              )}
+              {state === 'waiting' && (
+                <div className="space-y-3">
+                  <p className="rounded-xl bg-brand-50 px-4 py-3 text-sm font-medium text-brand-700">
+                    Telegram ochildi. U yerda botni ishga tushirib, raqamingizni ulashing.
+                  </p>
+                  <a href={botUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-brand-600 hover:underline">
+                    Telegram ochilmadimi? Shu yerni bosing
+                  </a>
+                </div>
+              )}
+              {state === 'expired' && (
+                <div className="space-y-3">
+                  <p className="rounded-xl bg-sun-soft px-4 py-3 text-sm font-medium text-[#8a5d00]">
+                    Vaqt tugadi. Qaytadan urining
+                  </p>
+                  <button onClick={start} className="btn-primary w-full py-4">Qaytadan urinish</button>
+                </div>
+              )}
+              {state === 'error' && (
+                <div className="space-y-3">
+                  {error && <p className="text-sm font-medium text-coral">{error}</p>}
+                  <button onClick={start} className="btn-primary w-full py-4">Qaytadan urinish</button>
+                </div>
               )}
             </div>
-            {error && <p className="mt-4 text-sm font-medium text-coral">{error}</p>}
 
             <p className="mt-10 flex items-center justify-center gap-2 text-xs text-muted">
               <ShieldCheck className="h-4 w-4 text-mint" /> Ma'lumotlaringiz Telegram orqali xavfsiz tasdiqlanadi

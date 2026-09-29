@@ -124,14 +124,30 @@ export default {
   async getUserByTelegramId(telegramId) {
     return userFrom(check(await sb().from('users').select('*').eq('telegram_id', telegramId).maybeSingle()));
   },
-  async createUser({ telegramId, telegramUsername, name }) {
+  async createUser({ telegramId, telegramUsername, name, phone }) {
     return userFrom(check(await sb().from('users').insert({
-      telegram_id: telegramId, telegram_username: telegramUsername, name,
+      telegram_id: telegramId, telegram_username: telegramUsername, name, phone,
     }).select('*').single()));
   },
   async updateUser(id, { telegramUsername, ...patch }) {
     if (telegramUsername !== undefined) patch.telegram_username = telegramUsername;
     return userFrom(check(await sb().from('users').update(patch).eq('id', id).select('*').single()));
+  },
+
+  async createPendingLogin(token, expiresAt) {
+    check(await sb().from('pending_logins').insert({ token, expires_at: expiresAt.toISOString() }));
+  },
+  async getPendingLogin(token) {
+    const row = check(await sb().from('pending_logins').select('*').eq('token', token).maybeSingle());
+    return row && { token: row.token, status: row.status, chatId: row.chat_id, userId: row.user_id, expiresAt: new Date(row.expires_at).getTime() };
+  },
+  async attachChatToLogin(token, chatId) {
+    check(await sb().from('pending_logins').update({ status: 'waiting_contact', chat_id: chatId }).eq('token', token).eq('status', 'waiting_start'));
+  },
+  async confirmLogin(chatId, userId) {
+    const rows = check(await sb().from('pending_logins').update({ status: 'confirmed', user_id: userId })
+      .eq('chat_id', chatId).eq('status', 'waiting_contact').gte('expires_at', new Date().toISOString()).select('token'));
+    return rows.length > 0;
   },
 
   async createBooking(d) {

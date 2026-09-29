@@ -5,7 +5,7 @@ import { getHealth } from '../controllers/healthController.js';
 import {
   getCategories, getStats, getListings, getListing, createListing, deleteListing, getDistricts,
 } from '../controllers/listingController.js';
-import { telegramAuth } from '../controllers/authController.js';
+import { startTelegramLogin, getTelegramLoginStatus, telegramWebhook } from '../controllers/authController.js';
 import { getMe, updateMe, getMyListings, getUserProfile } from '../controllers/userController.js';
 import { createBooking, getMyBookings, getIncomingBookings, updateBooking } from '../controllers/bookingController.js';
 
@@ -20,7 +20,9 @@ router.get('/listings/:id', a(getListing));
 router.post('/listings', requireAuth, a(createListing));
 router.delete('/listings/:id', requireAuth, a(deleteListing));
 
-router.post('/auth/telegram', a(telegramAuth));
+router.post('/auth/telegram/start', a(startTelegramLogin));
+router.get('/auth/telegram/status/:token', a(getTelegramLoginStatus));
+router.post('/telegram/webhook', a(telegramWebhook));
 
 router.get('/me', requireAuth, getMe);
 router.patch('/me', requireAuth, a(updateMe));
