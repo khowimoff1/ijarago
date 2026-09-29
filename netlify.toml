@@ -9,7 +9,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["express", "@supabase/supabase-js"]
+  external_node_modules = ["express", "@supabase/supabase-js", "ws"]
 
 # API so'rovlari serverless funksiyaga yo'naltiriladi
 [[redirects]]

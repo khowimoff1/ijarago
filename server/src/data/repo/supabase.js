@@ -1,9 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
+import WebSocketImpl from 'ws';
 import { bookingListing } from '../shapes.js';
 
 let client;
+// Netlify Functions muhitida native WebSocket yo'q (Node 20 runtime) — supabase-js
+// har doim RealtimeClient'ni qurishga urinadi va shu sabab konstruktorda xato beradi,
+// hech qanday realtime funksiya ishlatmasak ham. 'ws' bilan qo'lda ta'minlaymiz.
 const sb = () => (client ??= createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
+  realtime: { transport: WebSocketImpl },
 }));
 
 const check = ({ data, error }) => {
