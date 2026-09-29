@@ -35,7 +35,6 @@ export default function Login() {
       script.async = true;
       script.setAttribute('data-telegram-login', BOT_USERNAME.replace(/^@/, ''));
       script.setAttribute('data-size', 'large');
-      script.setAttribute('data-radius', '14');
       script.setAttribute('data-onauth', 'onTelegramAuth(user)');
       script.setAttribute('data-request-access', 'write');
       widgetRef.current.appendChild(script);
@@ -69,7 +68,7 @@ export default function Login() {
               {loading ? (
                 <p className="font-semibold text-muted">Tekshirilmoqda...</p>
               ) : BOT_USERNAME ? (
-                <div ref={widgetRef} />
+                <div ref={widgetRef} className="overflow-hidden rounded-full" />
               ) : (
                 <p className="rounded-xl bg-[#fde6e0] px-4 py-3 text-sm font-medium text-coral">
                   Telegram kirish hali sozlanmagan (VITE_TELEGRAM_BOT_USERNAME yo'q)
