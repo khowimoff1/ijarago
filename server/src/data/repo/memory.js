@@ -7,14 +7,13 @@ for (const l of seedListings) {
   const o = l.owner;
   if (users.some((u) => u.id === o.id)) continue;
   users.push({
-    id: o.id, phone: `seed-${o.id}`, name: o.name, bio: '', district: l.district,
+    id: o.id, telegramUsername: null, name: o.name, bio: '', district: l.district,
     verified: o.verified, rating: o.rating, deals: o.deals, createdAt: `${o.since}-01-01T00:00:00.000Z`,
   });
 }
 const listings = seedListings.map(({ owner, ...rest }) => ({ ...rest, ownerId: owner.id }));
 const reviews = [...seedReviews];
 const bookings = [];
-const codes = new Map();
 
 const withOwner = ({ ownerId, ...l }) => ({ ...l, owner: ownerOf(users.find((u) => u.id === ownerId)) });
 const withListing = (b) => ({ ...b, listing: bookingListing(listings.find((l) => l.id === b.listingId)) || null });
@@ -84,7 +83,7 @@ export default {
   },
 
   async getUser(id) { return users.find((u) => u.id === id) || null; },
-  async getUserByPhone(phone) { return users.find((u) => u.phone === phone) || null; },
+  async getUserByTelegramId(telegramId) { return users.find((u) => u.telegramId === telegramId) || null; },
   async createUser(data) {
     const u = { id: newId('u'), bio: '', district: '', verified: false, rating: 0, deals: 0, createdAt: new Date().toISOString(), ...data };
     users.push(u);
@@ -107,12 +106,5 @@ export default {
     b.status = status;
     if (status === 'confirmed') users.find((u) => u.id === b.ownerId).deals += 1;
     return withListing(b);
-  },
-
-  async saveCode(phone, code, expiresAt) { codes.set(phone, { code, expiresAt }); },
-  async takeCode(phone) {
-    const c = codes.get(phone);
-    codes.delete(phone);
-    return c && c.expiresAt > Date.now() ? c.code : null;
   },
 };

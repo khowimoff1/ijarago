@@ -11,6 +11,7 @@ Node.js (Express) backend + React (Vite) + Tailwind CSS v4 frontend.
 npm install
 npm run install:all
 copy server\.env.example server\.env     # Windows
+copy client\.env.example client\.env     # Windows
 ```
 
 ## Ishga tushirish
@@ -20,7 +21,7 @@ npm run dev
 - Sayt: http://localhost:5173
 - API:  http://localhost:5000/api
 
-Demo kirish: istalgan telefon raqam, SMS kod — **123456**.
+Kirish Telegram orqali (pastdagi "Telegram orqali kirish" bo'limiga qarang).
 
 ## Sahifalar
 | Yo'l | Sahifa |
@@ -29,7 +30,7 @@ Demo kirish: istalgan telefon raqam, SMS kod — **123456**.
 | `/katalog` | Katalog: qidiruv, kategoriya/tuman/narx filtrlari, saralash |
 | `/elon/:id` | E'lon sahifasi: sana tanlash, narx hisobi, egasi, sharhlar, o'xshash e'lonlar |
 | `/elon-berish` | E'lon joylash formasi (jonli oldindan ko'rish bilan) |
-| `/kirish` | Telefon + SMS kod orqali kirish |
+| `/kirish` | Telegram orqali kirish |
 | `/sevimlilar` | Saqlangan e'lonlar |
 | `/profil` | Mening profilim (kirish shart): e'lonlarim, bandlarim, kelgan so'rovlar (tasdiqlash/rad etish), sevimlilar, sozlamalar |
 | `/egasi/:id` | Egasining ochiq profili va uning e'lonlari |
@@ -46,8 +47,7 @@ Demo kirish: istalgan telefon raqam, SMS kod — **123456**.
 | GET | `/api/listings/:id` | Bitta e'lon + sharhlar + o'xshashlar |
 | POST | `/api/listings` 🔒 | Yangi e'lon |
 | DELETE | `/api/listings/:id` 🔒 | E'lonni o'chirish (faqat egasi) |
-| POST | `/api/auth/send-code` | SMS kod yuborish (demo) |
-| POST | `/api/auth/verify` | Kodni tekshirish, `token` qaytaradi |
+| POST | `/api/auth/telegram` | Telegram Login Widget ma'lumotini tekshirib, `token` qaytaradi |
 | GET / PATCH | `/api/me` 🔒 | Mening profilim / tahrirlash (ism, tuman, bio) |
 | GET | `/api/me/listings` 🔒 | Mening e'lonlarim |
 | GET | `/api/me/bookings` 🔒 | Men band qilganlar |
@@ -69,7 +69,19 @@ Demo kirish: istalgan telefon raqam, SMS kod — **123456**.
 5. Netlify → Environment variables ga ham xuddi shu ikkita o'zgaruvchini (Secret sifatida) qo'shing.
 
 Jadvallarda RLS yoqilgan va siyosat yo'q, shuning uchun bazaga faqat server orqali kirish mumkin.
-Keyingi qadam: MongoDB yoki PostgreSQL ulash.
+
+Yangi baza yaratganda (yoki `users.telegram_id` ustuni yo'q bo'lsa) `supabase/migrations/002_telegram_auth.sql` ni ham SQL Editor'da ishga tushiring.
+
+## Telegram orqali kirish
+
+Kirish [Telegram Login Widget](https://core.telegram.org/widgets/login) orqali amalga oshadi — SMS yo'q, bepul.
+
+1. Telegram'da **@BotFather** ga yozing, `/newbot` bilan bot yarating.
+2. Berilgan tokenni `server/.env` ga `TELEGRAM_BOT_TOKEN=` sifatida yozing.
+3. `/setdomain` buyrug'i bilan botni saytingiz domenига (masalan `ijaragodemo.netlify.app`) bog'lang — bu shart, aks holda tugma ishlamaydi.
+4. Bot username'ini `client/.env` ga (va Netlify → Environment variables'ga, Secret belgisiz) `VITE_TELEGRAM_BOT_USERNAME=` sifatida yozing.
+
+Foydalanuvchining Telegram nomi/rasmi emas, faqat ism va username saqlanadi (`users.telegram_username`).
 
 ## Tuzilma
 ```

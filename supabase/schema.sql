@@ -9,8 +9,10 @@ create table if not exists categories (
 );
 
 create table if not exists users (
-  id         text primary key default gen_random_uuid()::text,
-  phone      text not null unique,
+  id                text primary key default gen_random_uuid()::text,
+  telegram_id       bigint unique,
+  telegram_username text,
+  phone             text unique,
   name       text not null,
   bio        text not null default '',
   district   text not null default '',

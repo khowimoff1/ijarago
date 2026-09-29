@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BadgeCheck, CalendarDays, Heart, LogOut, MapPin, Package, Phone, Plus, Trash2, Inbox, CheckCircle2 } from 'lucide-react';
+import { BadgeCheck, CalendarDays, Heart, LogOut, MapPin, Package, Send, Plus, Trash2, Inbox, CheckCircle2 } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { som } from '../lib/format.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -136,7 +136,9 @@ export default function Profile() {
               {user.verified && <BadgeCheck className="h-5 w-5 text-mint" />}
             </h1>
             <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
-              <span className="flex items-center gap-1.5"><Phone className="h-4 w-4" /> {user.phone}</span>
+              {user.telegramUsername && (
+                <span className="flex items-center gap-1.5"><Send className="h-4 w-4" /> @{user.telegramUsername}</span>
+              )}
               {user.district && <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {user.district}</span>}
               <span className="flex items-center gap-1.5"><CalendarDays className="h-4 w-4" /> {memberSince}-yildan beri</span>
             </div>
@@ -255,10 +257,12 @@ export default function Profile() {
               <span className="mb-2 block text-sm font-semibold">Ism</span>
               <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={40} className="input" />
             </label>
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold">Telefon</span>
-              <input value={user.phone} disabled className="input opacity-60" />
-            </label>
+            {user.telegramUsername && (
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold">Telegram</span>
+                <input value={`@${user.telegramUsername}`} disabled className="input opacity-60" />
+              </label>
+            )}
             <label className="block">
               <span className="mb-2 block text-sm font-semibold">Tuman</span>
               <select value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} className="input">

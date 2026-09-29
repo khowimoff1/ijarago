@@ -16,7 +16,7 @@ export const publicUser = (u) => ({
   createdAt: u.createdAt,
 });
 
-export const privateUser = (u) => ({ ...publicUser(u), phone: u.phone });
+export const privateUser = (u) => ({ ...publicUser(u), telegramUsername: u.telegramUsername || null });
 
 export const bookingListing = (l) => l && ({
   id: l.id, title: l.title, category: l.category, district: l.district, images: l.images, pricePerDay: l.pricePerDay,

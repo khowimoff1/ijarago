@@ -31,8 +31,7 @@ export const api = {
   createListing: (body) => request('/listings', send('POST', body)),
   deleteListing: (id) => request('/listings/' + id, { method: 'DELETE' }),
 
-  sendCode: (phone) => request('/auth/send-code', send('POST', { phone })),
-  verify: (body) => request('/auth/verify', send('POST', body)),
+  telegramAuth: (body) => request('/auth/telegram', send('POST', body)),
 
   me: () => request('/me'),
   updateMe: (body) => request('/me', send('PATCH', body)),

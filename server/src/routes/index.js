@@ -5,7 +5,7 @@ import { getHealth } from '../controllers/healthController.js';
 import {
   getCategories, getStats, getListings, getListing, createListing, deleteListing, getDistricts,
 } from '../controllers/listingController.js';
-import { sendCode, verifyCode } from '../controllers/authController.js';
+import { telegramAuth } from '../controllers/authController.js';
 import { getMe, updateMe, getMyListings, getUserProfile } from '../controllers/userController.js';
 import { createBooking, getMyBookings, getIncomingBookings, updateBooking } from '../controllers/bookingController.js';
 
@@ -20,8 +20,7 @@ router.get('/listings/:id', a(getListing));
 router.post('/listings', requireAuth, a(createListing));
 router.delete('/listings/:id', requireAuth, a(deleteListing));
 
-router.post('/auth/send-code', a(sendCode));
-router.post('/auth/verify', a(verifyCode));
+router.post('/auth/telegram', a(telegramAuth));
 
 router.get('/me', requireAuth, getMe);
 router.patch('/me', requireAuth, a(updateMe));

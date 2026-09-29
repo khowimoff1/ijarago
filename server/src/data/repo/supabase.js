@@ -20,8 +20,8 @@ const LISTING_SELECT = '*, owner:users!owner_id(id,name,rating,deals,verified,cr
 const BOOKING_SELECT = '*, listing:listings(id,title,category,district,images,price_per_day)';
 
 const userFrom = (r) => r && ({
-  id: r.id, phone: r.phone, name: r.name, bio: r.bio, district: r.district, verified: r.verified,
-  rating: Number(r.rating), deals: r.deals, createdAt: r.created_at,
+  id: r.id, telegramUsername: r.telegram_username, name: r.name, bio: r.bio, district: r.district,
+  verified: r.verified, rating: Number(r.rating), deals: r.deals, createdAt: r.created_at,
 });
 
 const listingFrom = (r) => r && ({
@@ -121,13 +121,16 @@ export default {
   async getUser(id) {
     return userFrom(check(await sb().from('users').select('*').eq('id', id).maybeSingle()));
   },
-  async getUserByPhone(phone) {
-    return userFrom(check(await sb().from('users').select('*').eq('phone', phone).maybeSingle()));
+  async getUserByTelegramId(telegramId) {
+    return userFrom(check(await sb().from('users').select('*').eq('telegram_id', telegramId).maybeSingle()));
   },
-  async createUser({ phone, name }) {
-    return userFrom(check(await sb().from('users').insert({ phone, name }).select('*').single()));
+  async createUser({ telegramId, telegramUsername, name }) {
+    return userFrom(check(await sb().from('users').insert({
+      telegram_id: telegramId, telegram_username: telegramUsername, name,
+    }).select('*').single()));
   },
-  async updateUser(id, patch) {
+  async updateUser(id, { telegramUsername, ...patch }) {
+    if (telegramUsername !== undefined) patch.telegram_username = telegramUsername;
     return userFrom(check(await sb().from('users').update(patch).eq('id', id).select('*').single()));
   },
 
@@ -158,14 +161,5 @@ export default {
       check(await sb().from('users').update({ deals: owner.deals + 1 }).eq('id', rows[0].owner_id));
     }
     return bookingFrom(rows[0]);
-  },
-
-  async saveCode(phone, code, expiresAt) {
-    check(await sb().from('login_codes').upsert({ phone, code, expires_at: new Date(expiresAt).toISOString() }));
-  },
-  async takeCode(phone) {
-    const rows = check(await sb().from('login_codes').delete().eq('phone', phone).select('code,expires_at'));
-    const row = rows[0];
-    return row && new Date(row.expires_at) > new Date() ? row.code : null;
   },
 };

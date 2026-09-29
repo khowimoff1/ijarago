@@ -3,34 +3,41 @@ import repo from '../data/repo/index.js';
 import { privateUser } from '../data/shapes.js';
 import { createToken } from '../utils/token.js';
 
-const CODE_TTL_MS = 5 * 60 * 1000;
-// Haqiqiy SMS/Telegram ulanmaguncha kod doim 123456. Productionda DEMO_AUTH=false qiling.
-const DEMO = process.env.DEMO_AUTH !== 'false';
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const AUTH_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-// "+998 90 123 45 67", "901234567" va h.k. — bir xil ko'rinishga keltiriladi
-const normalizePhone = (raw = '') => {
-  let digits = String(raw).replace(/\D/g, '');
-  if (digits.length === 9) digits = '998' + digits;
-  return digits.length === 12 && digits.startsWith('998') ? '+' + digits : null;
+// Telegram Login Widget imzosini tekshiradi: https://core.telegram.org/widgets/login#checking-authorization
+const verifyTelegramAuth = (data) => {
+  if (!BOT_TOKEN) return false;
+  const { hash, ...rest } = data;
+  if (!hash) return false;
+  const checkString = Object.keys(rest)
+    .filter((k) => rest[k] !== undefined && rest[k] !== null)
+    .sort()
+    .map((k) => `${k}=${rest[k]}`)
+    .join('\n');
+  const secret = crypto.createHash('sha256').update(BOT_TOKEN).digest();
+  const expected = crypto.createHmac('sha256', secret).update(checkString).digest('hex');
+  const a = Buffer.from(expected);
+  const b = Buffer.from(String(hash));
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
+  return Date.now() - Number(data.auth_date) * 1000 < AUTH_MAX_AGE_MS;
 };
 
-export const sendCode = async (req, res) => {
-  const phone = normalizePhone(req.body.phone);
-  if (!phone) return res.status(400).json({ message: "Telefon raqam noto'g'ri" });
-  if (!DEMO) return res.status(503).json({ message: "SMS xizmati hali ulanmagan" });
-  await repo.saveCode(phone, '123456', Date.now() + CODE_TTL_MS);
-  res.json({ ok: true, hint: 'Demo kod: 123456' });
-};
+export const telegramAuth = async (req, res) => {
+  if (!verifyTelegramAuth(req.body)) {
+    return res.status(400).json({ message: "Telegram orqali tasdiqlash muvaffaqiyatsiz. Qaytadan urining" });
+  }
+  const { id, first_name, last_name, username } = req.body;
+  const telegramId = Number(id);
+  const name = [first_name, last_name].filter(Boolean).join(' ').trim().slice(0, 40) ||
+    username || 'Foydalanuvchi';
 
-export const verifyCode = async (req, res) => {
-  const phone = normalizePhone(req.body.phone);
-  const { code, name } = req.body;
-  const saved = phone && (await repo.takeCode(phone));
-  const ok = saved && code && saved.length === String(code).length &&
-    crypto.timingSafeEqual(Buffer.from(saved), Buffer.from(String(code)));
-  if (!ok) return res.status(400).json({ message: "Kod noto'g'ri yoki eskirgan. Qayta kod oling" });
-
-  const user = (await repo.getUserByPhone(phone)) ||
-    (await repo.createUser({ phone, name: String(name || '').trim().slice(0, 40) || 'Foydalanuvchi' }));
+  let user = await repo.getUserByTelegramId(telegramId);
+  if (!user) {
+    user = await repo.createUser({ telegramId, telegramUsername: username || null, name });
+  } else if (username !== user.telegramUsername) {
+    user = await repo.updateUser(user.id, { telegramUsername: username || null });
+  }
   res.json({ user: privateUser(user), token: createToken(user) });
 };
